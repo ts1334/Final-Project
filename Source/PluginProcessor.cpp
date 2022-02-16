@@ -22,10 +22,18 @@ ProjectCodeAudioProcessor::ProjectCodeAudioProcessor()
                        )
 #endif
 {
+    // Reference
+    formatManager.registerBasicFormats();
+    for (int i = 0; i < numVoices; i++)
+    {
+        sampler.addVoice(new juce::SamplerVoice());
+    }
 }
 
 ProjectCodeAudioProcessor::~ProjectCodeAudioProcessor()
 {
+    // Reference
+    formatReader = nullptr;
 }
 
 //==============================================================================
@@ -95,6 +103,9 @@ void ProjectCodeAudioProcessor::prepareToPlay (double sampleRate, int samplesPer
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    
+    // Reference
+    sampler.setCurrentPlaybackSampleRate(sampleRate);
 }
 
 void ProjectCodeAudioProcessor::releaseResources()
@@ -156,6 +167,9 @@ void ProjectCodeAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, 
 
         // ..do something to the data...
     }
+
+    // Reference
+    sampler.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
 }
 
 //==============================================================================
@@ -181,6 +195,39 @@ void ProjectCodeAudioProcessor::setStateInformation (const void* data, int sizeI
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+// Reference
+void ProjectCodeAudioProcessor::loadFile()
+{
+    sampler.clearSounds();
+
+    juce::FileChooser fileChooser("Please load a file");
+
+    if (fileChooser.browseForFileToOpen())
+    {
+        auto file = fileChooser.getResult();
+        formatReader = formatManager.createReaderFor(file);
+    }
+
+    juce::BigInteger range;
+    range.setRange(12, 128, true);
+
+    sampler.addSound(new juce::SamplerSound("Sample", *formatReader, range, 60, 0.1, 0.1, 10));
+}
+
+// Reference
+void ProjectCodeAudioProcessor::loadFile(const juce::String& path)
+{
+    sampler.clearSounds();
+
+    auto file = juce::File(path);
+    formatReader = formatManager.createReaderFor(file);
+
+    juce::BigInteger range;
+    range.setRange(12, 128, true);
+
+    sampler.addSound(new juce::SamplerSound("Sample", *formatReader, range, 60, 0.1, 0.1, 10));
 }
 
 //==============================================================================
