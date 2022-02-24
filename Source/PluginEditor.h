@@ -11,6 +11,15 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+// Reference
+struct CustomRotarySlider : juce::Slider
+{
+    CustomRotarySlider() : juce::Slider(juce::Slider::SliderStyle::RotaryHorizontalVerticalDrag, juce::Slider::TextEntryBoxPosition::NoTextBox)
+    {
+
+    }
+};
+
 //==============================================================================
 /**
 */
@@ -33,11 +42,21 @@ private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
 
-    // Reference
-
-    juce::TextButton loadButton{ "Load" };
-
     ProjectCodeAudioProcessor& audioProcessor;
+
+    // Reference
+    juce::TextButton loadButton{ "Drag and Drop or Click to Select an Audio File to be Sampled" };
+    
+    CustomRotarySlider bitDepthSlider;
+        //, sampleRateSlider, sampleMidiNoteSlider;
+
+    // Reference
+    using APVTS = juce::AudioProcessorValueTreeState;
+    using Attachment = APVTS::SliderAttachment;
+
+    Attachment bitDepthSliderAttachment;
+        //, sampleRateSliderAttachment, sampleMidiNoteSliderAttachment;
+
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProjectCodeAudioProcessorEditor)
 };

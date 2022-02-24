@@ -54,10 +54,20 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     // Reference
-    void loadFile();
-    void loadFile(const juce::String& path);
+    void loadSample();
+    void loadSample(const juce::String& path);
+
+
+    juce::AudioBuffer<float>* ProjectCodeAudioProcessor::convertSampleBitDepth(juce::AudioBuffer<float>* sampleData, int desiredBitDepth);
+    juce::AudioBuffer<float>* ProjectCodeAudioProcessor::convertSampleSampleRate(juce::AudioBuffer<float>* sampleData);
+    juce::AudioBuffer<float>* ProjectCodeAudioProcessor::bitCrushSample(juce::AudioBuffer<float>* sampleData, int desiredBitDepth);
+    void addSample(juce::SamplerSound sample);
 
     int getNumSamplerSounds() { return sampler.getNumSounds(); }
+
+    // Reference
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState apvts{ *this, nullptr, "Parameters", createParameterLayout() };
 
 private:
     // Reference
