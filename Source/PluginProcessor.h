@@ -10,6 +10,13 @@
 
 #include <JuceHeader.h>
 
+struct Parameters
+{
+    int sampleMIDINote = 60;
+    int bitDepth = 16;
+    float sampleRate = 44100;
+};
+
 //==============================================================================
 /**
 */
@@ -53,14 +60,27 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    void getAndSetParams();
+
+    juce::BigInteger getRange();
+
     // Reference
     void loadSample();
     void loadSample(const juce::String& path);
 
+    bool sampleLoaded();
 
-    juce::AudioBuffer<float>* ProjectCodeAudioProcessor::convertSampleBitDepth(juce::AudioBuffer<float>* sampleData, int desiredBitDepth);
-    juce::AudioBuffer<float>* ProjectCodeAudioProcessor::convertSampleSampleRate(juce::AudioBuffer<float>* sampleData);
-    juce::AudioBuffer<float>* ProjectCodeAudioProcessor::bitCrushSample(juce::AudioBuffer<float>* sampleData, int desiredBitDepth);
+    void updateSample(juce::BigInteger range);
+
+    // Bit depth conversion
+    void convertSampleBitDepthDPCM(juce::AudioBuffer<float>* sampleData, float sampleRateConverted, int desiredBitDepth, int slopeBitDepth);
+    void convertSampleBitDepthPCM(juce::AudioBuffer<float>* sampleData, int desiredBitDepth);
+
+    // Sample rate conversion
+    void convertSampleSampleRate(juce::AudioBuffer<float>* sampleData, float desiredSampleRate);
+
+    // Overall bit crushing
+    void bitCrushSample(juce::AudioBuffer<float>* sampleData, float desiredSampleRate, int desiredBitDepth, bool DPCM, int DPCMDepth = 0);
     void addSample(juce::SamplerSound sample);
 
     int getNumSamplerSounds() { return sampler.getNumSounds(); }
@@ -72,10 +92,19 @@ public:
 private:
     // Reference
     juce::Synthesiser sampler;
-    const int numVoices{ 3 };
+    juce::AudioSampleBuffer* sampleData;
+    juce::File sampleFile;
+    juce::BigInteger range;
+    const int numVoices{ 1 };
+
+    Parameters params;
 
     juce::AudioFormatManager formatManager;
     juce::AudioFormatReader* formatReader{ nullptr };
+
+    juce::WavAudioFormat wavFormat;
+    std::unique_ptr<juce::AudioFormatWriter> writer;
+
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProjectCodeAudioProcessor)

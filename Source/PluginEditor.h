@@ -11,6 +11,7 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 
+/*
 // Reference
 struct CustomRotarySlider : juce::Slider
 {
@@ -19,12 +20,15 @@ struct CustomRotarySlider : juce::Slider
 
     }
 };
+*/
 
 //==============================================================================
 /**
 */
 class ProjectCodeAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                         public juce::FileDragAndDropTarget
+                                         public juce::FileDragAndDropTarget,
+                                         juce::AudioProcessorParameter::Listener,
+                                         juce::Timer
 {
 public:
     ProjectCodeAudioProcessorEditor (ProjectCodeAudioProcessor&);
@@ -33,6 +37,13 @@ public:
     //==============================================================================
     void paint (juce::Graphics&) override;
     void resized() override;
+
+    //Reference EQ vid
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override
+    {
+    }
+    void timerCallback() override;
 
     // Reference
     bool isInterestedInFileDrag(const juce::StringArray& files) override;
@@ -44,19 +55,23 @@ private:
 
     ProjectCodeAudioProcessor& audioProcessor;
 
+    // Reference EQ
+    juce::Atomic<bool> parametersChanged = false;
+
     // Reference
     juce::TextButton loadButton{ "Drag and Drop or Click to Select an Audio File to be Sampled" };
     
-    CustomRotarySlider bitDepthSlider;
-        //, sampleRateSlider, sampleMidiNoteSlider;
+    
+    juce::ComboBox consoleSelector, sampleMIDINoteSelector;
+    juce::Slider NESBitDepthSlider, NESSampleRateSlider;
+
 
     // Reference
     using APVTS = juce::AudioProcessorValueTreeState;
     using Attachment = APVTS::SliderAttachment;
 
-    Attachment bitDepthSliderAttachment;
-        //, sampleRateSliderAttachment, sampleMidiNoteSliderAttachment;
-
+    juce::AudioProcessorValueTreeState::ComboBoxAttachment consoleSelectorAttachment, sampleMIDINoteSelectorAttachment;
+    juce::AudioProcessorValueTreeState::SliderAttachment NESBitDepthSliderAttachment, NESSampleRateSliderAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ProjectCodeAudioProcessorEditor)
 };

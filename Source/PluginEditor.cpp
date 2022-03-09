@@ -12,18 +12,46 @@
 //==============================================================================
 ProjectCodeAudioProcessorEditor::ProjectCodeAudioProcessorEditor (ProjectCodeAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p),
-    bitDepthSliderAttachment(audioProcessor.apvts, "BitDepth", bitDepthSlider)
+    consoleSelectorAttachment(audioProcessor.apvts, "Console", consoleSelector),
+    sampleMIDINoteSelectorAttachment(audioProcessor.apvts, "SampleMidiNote", sampleMIDINoteSelector),
+    NESBitDepthSliderAttachment(audioProcessor.apvts, "NESBitDepth", NESBitDepthSlider),
+    NESSampleRateSliderAttachment(audioProcessor.apvts, "NESSampleRate", NESSampleRateSlider)
 {
     // Reference
     loadButton.onClick = [&]() { audioProcessor.loadSample(); };
     addAndMakeVisible(loadButton);
-    addAndMakeVisible(bitDepthSlider);
+
+    addAndMakeVisible(consoleSelector);
+    consoleSelector.addItemList(juce::StringArray("NES", "SNES", "GameBoy", "GBA"), 1);
+    addAndMakeVisible(sampleMIDINoteSelector);
+    juce::StringArray midiNotesStringArray;
+    for (int i = 12; i <= 128; i++)
+    {
+        midiNotesStringArray.add((juce::String)i);
+    }
+    sampleMIDINoteSelector.addItemList(midiNotesStringArray, 1);
+    addAndMakeVisible(NESBitDepthSlider);
+    addAndMakeVisible(NESSampleRateSlider);
+
+    const auto& params = audioProcessor.getParameters();
+    for (auto param : params)
+    {
+        param->addListener(this);
+    }
+
+    //Reference EQ Vid
+    startTimerHz(60);
 
     setSize (800, 450);
 }
 
 ProjectCodeAudioProcessorEditor::~ProjectCodeAudioProcessorEditor()
 {
+    const auto& params = audioProcessor.getParameters();
+    for (auto param : params)
+    {
+        param->removeListener(this);
+    }
 }
 
 //==============================================================================
@@ -40,8 +68,29 @@ void ProjectCodeAudioProcessorEditor::resized()
     
     // Reference
     loadButton.setBounds(0, 0, getWidth()/4, getHeight()/4);
+    consoleSelector.setBounds(getWidth() / 2 - 50, getHeight()/5, 100, 50);
+    sampleMIDINoteSelector.setBounds(getWidth() / 2 - 50, 2*getHeight()/5, 100, 50);
+    NESBitDepthSlider.setBounds(getWidth() / 2 - 100, 3 * getHeight() / 5, 200, 100);
+    NESSampleRateSlider.setBounds(getWidth() / 2 - 100, 4 * getHeight() / 5, 200, 100);
+}
 
-    bitDepthSlider.setBounds(getWidth() / 2 - 100, getHeight() / 2 - 100, 200, 200);
+//Reference EQ
+void ProjectCodeAudioProcessorEditor::parameterValueChanged(int parameterIndex, float newValue) 
+{
+    parametersChanged.set(true);
+}
+
+// Reference EQ
+void ProjectCodeAudioProcessorEditor::timerCallback()
+{
+    if (parametersChanged.compareAndSetBool(false, true))
+    {
+        if (audioProcessor.sampleLoaded())
+        {
+            audioProcessor.getAndSetParams();
+            audioProcessor.updateSample(audioProcessor.getRange());
+        }
+    }
 }
 
 // Reference
